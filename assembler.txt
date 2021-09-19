@@ -1,0 +1,157 @@
+// createSymbolTable
+// createCompTable, createDestTable, createJumpTable 
+
+
+//1. create and populate the symbol table 
+//2. create and populate the instruction tables 
+//3. parse each line, tokenize, translate to binary, write to the output file 
+
+asmFileName = argument[1] 
+
+// variables and labels 
+symbolTable = createSymbolTable(asmFileName)
+
+// instructions
+compTable = createCompTable()
+destTable = createDestTable()         
+jumpTable = createJumpTable()
+
+file = openFile(asmFileName)
+
+if ( failedToOpenFile(file) ):
+    printErrorMessage("unable to open file")
+    exit() 
+
+fileNameWithoutExtension = asmFileName.Strip(".asm")
+
+binaryFileOut = openFile(fileNameWithoutExtension + ".hack")
+
+for line in file:
+    line = removeWhiteSpace(line)
+    line = removeComments(line) 
+
+    if ( isEmptyLine(line)):
+        contine 
+
+    if ( isAInstruction(line) ):
+        bin = aInstruction(line)
+        binaryFileOut.Write(bin) 
+        contine 
+
+    if ( isCInstruction(line) ):
+        bin = cInstruction(line)
+        binaryFileOut.Write(bin)
+        continue 
+
+    error() 
+
+binaryFileOut.close()
+file.close() 
+
+
+// A instructions 
+function isAInstruction(line):
+
+    if (line[0] != '@'):
+        return false 
+
+    dropAt = line[1 : len(line) - 1]
+
+    if (positiveInteger(dropAt)):
+        return true 
+
+    if ( isDigit(dropAt[0]) ):
+        return false
+    
+    if ( validSymbolChars(dropAt) );
+        return true 
+
+    return false
+
+// translate A instruction 
+
+function aInstruction(line): // assume valid A instruction 
+
+    dropAt = line[1 : len(line) - 1]
+
+    if ( positiveInteger(dropAt) ):
+        bin = toBinary15Bit(dropAt)
+        return ( '0' + bin )
+
+    addr = symbolTable[dropAt]
+    bin = toBinary15Bit(addr)
+    return ('0' + bin) 
+
+
+// C instructions 
+function isCInstruction(line):
+    if ( NOT (countChars(line, '=') == 1 || countChars(line, ';') == 1 )):
+        return false 
+
+    tokens = splitStringAtChars(line, ['=', ';'])
+
+    if (tokens.size() != 2 AND tokens.size() != 3):
+        return false
+
+    if (tokens.size() == 2):
+        if (countChars(line, '=') == 1):
+            // dest and comp 
+            if ( NOT destTable.contains(tokens[0])):
+                return false 
+            if ( NOT compTable.contains(tokens[1])):
+                return false 
+        else:
+            // comp and jump 
+            if ( NOT compTable.contains(tokens[0])):
+                return false 
+            if ( NOT jumpTable.contains(tokens[1])):
+                return false 
+    else:
+        // dest, comp, jump present 
+        if ( NOT destTable.contains(tokens[0])):
+            return false
+
+        if ( NOT compTable.contains(tokens[1])):
+            return false 
+
+        if ( NOT jumpTable.contains(tokens[2])):
+            return false 
+
+    return true
+
+
+function cInstruction(line):
+    tokens = splitStringAtChars(line, ['=', ';'])
+
+    prefix = "111"
+    dest = ""
+    comp = ""
+    jump = ""
+
+    if (tokens.size() == 2):
+        if (countChars(line, '=') == 1):
+            // dest and comp 
+            dest = destTable[ tokens[0] ]
+            comp = compTable[ tokens[1] ]
+            jump = "000"
+
+            if (dest == null || comp == null):
+                error() // not valid C instruction
+        else:
+            // comp and jump 
+            dest = "000"
+            comp = compTable[ tokens[0] ]
+            jump = jumpTable[ tokens[1] ]
+            
+            if (comp == null || jump == null ):
+                error() // not valid C instruction
+    else:
+        // dest, comp, jump present 
+        dest = destTable[ tokens[0] ]
+        comp = compTable[ tokens[1] ]
+        jump = jumpTable[ tokens[2] ]
+
+        if (dest == null || comp == null || jump == null):
+            error() // not valid C instruction 
+
+    return (prefix + comp + dest + jump)

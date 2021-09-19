@@ -1,0 +1,86 @@
+function createSymbolTable(assemblyFileName):
+    symbolTable = HashTable(sting, integer)
+
+    symbolTable["SP"] = 0 
+    symbolTable["LCL"] = 1 
+    symbolTable["ARG"] = 2
+    symbolTable[“THIS”] = 3
+    symbolTable[“THAT”] = 4
+
+    for r in (0, 1, 2, ... , 15):
+        symbolTable["R" + string(r) ] = r 
+
+    symbolTable[“SCREEN”] = 16384
+    symbolTable[“KBD”] = 24576
+
+    file = openFile(assemblyFileName)
+    pc = 0 
+
+    for line in file:
+        clean = removeCommentsAndWhitespace(line)
+        if (isLabel(clean)):
+
+            label = removeParenthesis(clean)
+
+            if ( NOT symbolTable.contains(label) ):
+                symbolTable[label] = pc 
+
+        if ( isInstruction(cleans)):
+            pc = pc + 1 
+
+    file = openFile(assemblyFileName)
+    nextAddress = 16 
+
+    for line in file:
+        clean = removeCommentsAndWhitespace(line)
+
+        if ( isValidAInstruction(clean) ):
+            AInstructionVal = clean.Strip("@")
+
+            if ( isNotNumber(AInstructionVal) 
+                AND NOT symbolTable.contains(AInstructionVal)):
+
+                symbolTable[AInstructionVal] = nextAddress 
+                nextAddress = nextAddress + 1
+                 
+    return symbolTable
+
+function createCompTable():
+    compTable = HashTable(string, int)
+
+    compTable["0"] = "0101010"
+    compTable["1"] = "0111111"
+    compTable["-1"] = "0111010"
+    ... 
+    compTable["A+1"] = "0110111";
+    compTable["D-1"] = "0001110";
+    compTable["A-1"] = "0110010";
+    compTable["D+A"] = "0000010";
+    ...
+    compTable["D&M"] = "1000000";
+    compTable["D|M"] = "1010101";
+
+    return compTable 
+
+function createDestTable():
+    destTable = HashTable(string, int)
+
+    destTable["M"] = "001"
+    destTable["D"] = "010"
+    destTable["MD"] = "011"
+    ... 
+
+    return destTable
+
+function createJumpTable():
+    jumpTable = HashTable(string, int)
+
+    jumpTable["JGT"] = "001"
+    jumpTable["JEQ"] = "010"
+    jumpTable["JGE"] = "011" 
+    ... 
+
+    return jumpTable
+
+
+
